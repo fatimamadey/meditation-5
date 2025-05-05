@@ -1,0 +1,74 @@
+<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
+<script src="https://unpkg.com/tone"></script>
+
+<style>
+  backgroundColor: 'black'
+</style>
+
+<script>
+  /*global nn, Tone*/
+  const synth = new Tone.PolySynth().toDestination()
+  let keydown = false // to manual control the behavior of keydown
+  const scale = nn.createScale('C4', 'major')
+  console.log(scale)
+  const bugs = {
+    a: {
+      emoji: '🐞',
+      chord: nn.createChord(scale.slice(0, 3), 'triad') // C, D, E
+    },
+    s: {
+      emoji: '🪰',
+      chord: nn.createChord(scale.slice(2, 5), 'triad') // E, F, G
+    },
+    d: {
+      emoji: '🐜',
+      chord: nn.createChord(scale.slice(4, 7), 'triad') // G, A, B
+    },
+    f: {
+      emoji: '🦟',
+      chord: nn.createChord(scale.slice(1, 4), 'triad') // D, E, F
+    }
+  }
+  //step = 0
+  
+  function startPlaying(key) {
+    console.log("starting", key)
+    const bug = bugs[key]
+    if (!bug) return
+
+    // add bug to screen random size and placement
+    const el = nn.create('span')
+    .content(bug.emoji)
+    .css({
+      position: 'absolute',
+      left: nn.random(0, nn.width),
+      top: nn.random(0, nn.height)
+    })
+    .addTo('body')
+    
+    // make the bug fade out
+    
+    if (!keydown){
+      synth.triggerAttack(bug.chord)
+      keydown = true
+      // step++
+      // if (step >= scale.length) step = 0
+    }
+  }
+  
+  function stopPlaying(key) {
+    console.log("stopping", key)
+    synth.triggerRelease(bugs[key].chord) 
+    keydown = false
+  }
+  
+  nn.on('keydown', e => {
+    const key = e.key.toLowerCase()
+    startPlaying(key)
+  })
+  nn.on('keyup', e => {
+    const key = e.key.toLowerCase()
+    stopPlaying(key)
+  })
+</script>
+
