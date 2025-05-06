@@ -1,43 +1,72 @@
 <script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
 <script src="https://unpkg.com/tone"></script>
 
-<style>
-  backgroundColor: 'black'
-</style>
-
 <script>
   /*global nn, Tone*/
   const synth = new Tone.PolySynth().toDestination()
   let keydown = false // to manual control the behavior of keydown
-  const scale = nn.createScale('C4', 'major')
-  console.log(scale)
+  const scale = nn.createScale('C4', 'major');
+  console.log(scale);
   const bugs = {
     a: {
-      emoji: '🐞',
-      chord: nn.createChord(scale.slice(0, 3), 'triad') // C, D, E
+      emoji: '🐞', // Ladybug — small, harmless
+      chord: nn.createChord([scale[0], scale[2], scale[4]], 'triad') // C, E, G — classic major, friendly
     },
     s: {
-      emoji: '🪰',
-      chord: nn.createChord(scale.slice(2, 5), 'triad') // E, F, G
+      emoji: '🪰', // Housefly — annoying, high-pitched buzzing
+      chord: nn.createChord([scale[5], scale[6], scale[0]], 'triad') // A, B, C — dissonant wrap-around buzz
     },
     d: {
-      emoji: '🐜',
-      chord: nn.createChord(scale.slice(4, 7), 'triad') // G, A, B
+      emoji: '🐜', // Ant — industrious, persistent
+      chord: nn.createChord([scale[1], scale[3], scale[5]], 'triad') // D, F, A — minor feel, earthy
     },
     f: {
-      emoji: '🦟',
-      chord: nn.createChord(scale.slice(1, 4), 'triad') // D, E, F
+      emoji: '🦟', // Mosquito — piercing, high and shrill
+      chord: nn.createChord([scale[6], scale[0], scale[2]], 'triad') // B, C, E — sharp and tense
+    },
+    j: {
+      emoji: '🦋', // Butterfly — graceful, airy
+      chord: nn.createChord([scale[0], scale[4], scale[7] || scale[0]], 'triad') // C, G, C (octave) — open and soaring
+    },
+    k: {
+      emoji: '🐛', // Caterpillar — slow, mellow
+      chord: nn.createChord([scale[0], scale[3], scale[5]], 'triad') // C, F, A — warm and crawling
+    },
+    l: {
+      emoji: '🦗', // Cricket — chirping, rhythmic
+      chord: nn.createChord([scale[2], scale[4], scale[6]], 'triad') // E, G, B — plucky and chirpy
     }
   }
-  //step = 0
+  
+  function animateBug(emoji) {
+    // Apply initial transition properties
+    const scaleFactor = nn.randomFloat(2, 4)
+    emoji.css({
+      transition: 'transform 2.5s ease, opacity 2.5s ease',
+      transform: `scale(${scaleFactor})`,
+      opacity: 1
+    })
+    // trigger scale up and fade out after a short delay
+    setTimeout(() => {
+      emoji.css({
+        transform: `scale(${scaleFactor})`,
+        opacity: 0
+      })
+    }, 300)
+    // remove the element after animation ends
+    setTimeout(() => emoji.remove(), 2600)
+  }
   
   function startPlaying(key) {
-    console.log("starting", key)
+    // console.log("starting", key)
     const bug = bugs[key]
-    if (!bug) return
+    if (!bug){
+      console.log("WRONG KEY")
+      return
+    } 
 
     // add bug to screen random size and placement
-    const el = nn.create('span')
+    const emoji = nn.create('span')
     .content(bug.emoji)
     .css({
       position: 'absolute',
@@ -47,19 +76,48 @@
     .addTo('body')
     
     // make the bug fade out
+    animateBug(emoji)
     
+    // play the specific bug sound
     if (!keydown){
       synth.triggerAttack(bug.chord)
       keydown = true
-      // step++
-      // if (step >= scale.length) step = 0
     }
   }
   
   function stopPlaying(key) {
-    console.log("stopping", key)
+    // console.log("stopping", key)
     synth.triggerRelease(bugs[key].chord) 
     keydown = false
+  }
+  
+  function playSound(){
+    nn.get('body').css({ backgroundColor: 'black' })
+    music = nn.create('audio')
+    .set({
+      src: 'cicada-buzzing.mp3',
+      // controls: true,
+      loop: true
+    })
+    .addTo('body') 
+    music.play()
+  }
+  
+  function setup(){
+    // button for the buzzing sound
+    button = nn.create('button')
+      .content('click here to start')
+      .addTo('body')
+      .on('click', playSound)
+    
+    // instructions
+    nn.create('span')
+      .content('    then press keys [a, s, d, f, j, k, l] to play😊')
+      .css({ color: 'white' })
+      .addTo('body')
+    
+    // background
+    nn.get('body').css({ backgroundColor: 'black' })
   }
   
   nn.on('keydown', e => {
@@ -70,5 +128,6 @@
     const key = e.key.toLowerCase()
     stopPlaying(key)
   })
+  nn.on('load', setup)
 </script>
 
